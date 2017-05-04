@@ -12,12 +12,16 @@ rootPassword="boop"
 iptables -F
 
   ## Configure the upstream MariaDB repository
+echo "Updating Local Repository Configuration..."
 apt-get -qq install -y software-properties-common > /tmp/software-properties.log
 apt-key adv --recv-keys --keyserver hkp://keyserver.ubuntu.com:80 0xF1656F24C74CD1D8 >/tmp/key-add.log 2>&1
 add-apt-repository 'deb [arch=amd64,i386,ppc64el] http://mirror.lstn.net/mariadb/repo/10.1/ubuntu xenial main' >/tmp/repo-add.log 2>&1
 
+echo "Installing MariaDB..."
 apt-get -qq update >/dev/null 2>&1
-apt-get -qq install -y mariadb-server mariadb-client rsync
+apt-get -qq install -y mariadb-server mariadb-client rsync >/dev/null
+
+echo "Configuring Cluster..."
 
   ## Configure Cluster
 cat <<EOI > /etc/mysql/my.cnf
@@ -40,7 +44,7 @@ tmpdir          = /tmp
 lc_messages_dir = /usr/share/mysql
 lc_messages     = en_US
 skip-external-locking
-bind-address            = 127.0.0.1
+bind-address            = 0.0.0.0
 max_connections         = 100
 connect_timeout         = 5
 wait_timeout            = 600
@@ -102,7 +106,7 @@ EOI
   ## Enable service at reboot
 /lib/systemd/systemd-sysv-install enable mysql
 
-echo -e "\\nY\\n${rootPassword}\\n${rootPassword}\\nY\\nY\\nn\\nY\\n" | mysql_secure_installation
+echo -e "\\nY\\n${rootPassword}\\n${rootPassword}\\nY\\nY\\nn\\nY\\n" | mysql_secure_installation >/dev/null 2>&1
 
   ## db01 will bootstrap the cluster the others will wait and rejoin
 if [[ "$(hostname -s)" == "db01" ]]; then
@@ -110,10 +114,17 @@ if [[ "$(hostname -s)" == "db01" ]]; then
   systemctl stop mysql
   galera_new_cluster
 
+    ## Finally, we create a user account for them to authenticate with. This will replicate when the other nodes join
+  echo "CREATE USER 'testuser'@'%' IDENTIFIED BY 'testpass';" | mysql -p${rootPassword}
+  echo "GRANT ALL on *.* to 'testuser'@'%' WITH GRANT OPTION" | mysql -p${rootPassword}
+
+
 else
 
-  sleep 30
+    ## Sleep to let db01 bootstrap the cluster
+  sleep 10
   systemctl restart mysql
 
 fi
 
+echo "Provision of $(hostname -s) completed"

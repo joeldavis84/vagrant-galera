@@ -1,0 +1,24 @@
+#!/bin/bash
+
+export DEBIAN_FRONTEND=noninteractive
+
+echo "Installing HAProxy"
+apt-get -qq update >/dev/null 2>&1
+apt-get -qq install -y haproxy >/dev/null 2>&1
+
+cat <<EOI >> /etc/haproxy/haproxy.cfg
+
+listen cluster
+    bind 0.0.0.0:3306
+    mode tcp
+    balance roundrobin
+    server db01 192.168.121.41:3306 check
+    server db02 192.168.121.42:3306 check
+    server db03 192.168.121.43:3306 check
+
+EOI
+
+systemctl restart haproxy
+systemctl enable haproxy
+
+echo "Provision of $(hostname -s) completed"

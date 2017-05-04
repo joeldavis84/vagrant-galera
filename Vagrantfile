@@ -29,11 +29,13 @@ Vagrant.configure('2') do |config|
 
   config.vm.define 'lb01' do |db|
     db.vm.hostname = 'lb01'
+    db.vm.provision :shell, path: 'provision-loadbalancer'
     db.vm.network "private_network", ip: '192.168.121.51'
   end
 
   config.vm.define 'lb02' do |db|
     db.vm.hostname = 'lb02'
+    db.vm.provision :shell, path: 'provision-loadbalancer'
     db.vm.network "private_network", ip: '192.168.121.52'
   end
 
