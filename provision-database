@@ -19,7 +19,7 @@ add-apt-repository 'deb [arch=amd64,i386,ppc64el] http://mirror.lstn.net/mariadb
 
 echo "Installing MariaDB..."
 apt-get -qq update >/dev/null 2>&1
-apt-get -qq install -y mariadb-server mariadb-client rsync >/dev/null
+apt-get -qq install -y mariadb-server mariadb-client rsync >/tmp/mariadb-install.log 2>&1
 
 echo "Configuring Cluster..."
 
@@ -104,7 +104,7 @@ wsrep_node_name="$(hostname -s)"
 EOI
 
   ## Enable service at reboot
-/lib/systemd/systemd-sysv-install enable mysql
+/lib/systemd/systemd-sysv-install enable mysql >/dev/null 2>&1
 
 echo -e "\\nY\\n${rootPassword}\\n${rootPassword}\\nY\\nY\\nn\\nY\\n" | mysql_secure_installation >/dev/null 2>&1
 
@@ -122,9 +122,12 @@ if [[ "$(hostname -s)" == "db01" ]]; then
 else
 
     ## Sleep to let db01 bootstrap the cluster
-  sleep 10
+  sleep 30
   systemctl restart mysql
 
 fi
+
+  ## Add VIP for database cluster
+echo -e '192.168.121.100  mariadb-cluster' >> /etc/hosts
 
 echo "Provision of $(hostname -s) completed"

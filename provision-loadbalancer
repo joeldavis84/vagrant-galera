@@ -2,10 +2,11 @@
 
 export DEBIAN_FRONTEND=noninteractive
 
-echo "Installing HAProxy"
+echo "Installing HAProxy..."
 apt-get -qq update >/dev/null 2>&1
 apt-get -qq install -y haproxy >/dev/null 2>&1
 
+echo "Configuring and starting HAProxy..."
 cat <<EOI >> /etc/haproxy/haproxy.cfg
 
 listen cluster
@@ -18,7 +19,21 @@ listen cluster
 
 EOI
 
+systemctl enable haproxy   >/dev/null 2>&1
 systemctl restart haproxy
-systemctl enable haproxy
+
+echo "Installing keepalived..."
+apt-get -qq install -y keepalived >/dev/null 2>&1
+
+echo "Configuring and starting keepalived..."
+cat /vagrant/$(hostname -s)-keepalived.conf > /etc/keepalived/keepalived.conf
+cat /vagrant/notify.sh > /etc/keepalived/notify.sh
+chmod 0700 /etc/keepalived/notify.sh
+
+systemctl enable keepalived >/dev/null 2>&1
+systemctl restart keepalived
+
+  ## Add VIP for database cluster
+echo -e '192.168.121.100  mariadb-cluster' >> /etc/hosts
 
 echo "Provision of $(hostname -s) completed"
