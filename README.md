@@ -22,3 +22,12 @@ IP addresses are as follows:
 - 192.168.121.41 :: First database node (db01)
 - 192.168.121.42 :: Second database node (db02)
 - 192.168.121.43 :: Third database node (db03)
+
+## Ideas For The Future
+
+Pretty much done but some ideas on what I could change:
+
+- Code organization in the Vagrantfile is a bit hectic and could be made easier to read
+- The load balancer should expose an TLS port as well as the member nodes
+- Secure stats from HAproxy wouldn't be too bad of an idea
+- The initial connection to a load balance seems to drag on longer than I think it should. I should investigate how to cut down that time.
