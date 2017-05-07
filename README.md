@@ -23,6 +23,9 @@ IP addresses are as follows:
 - 192.168.121.42 :: Second database node (db02)
 - 192.168.121.43 :: Third database node (db03)
 
+## Known issues
+- For some reason this only starts with `libvirtd` is the provider. Just tested with virtual box and the load balancers came up alright but the cluster appears to have ran into an issue.
+
 ## Ideas For The Future
 
 Pretty much done but some ideas on what I could change:
